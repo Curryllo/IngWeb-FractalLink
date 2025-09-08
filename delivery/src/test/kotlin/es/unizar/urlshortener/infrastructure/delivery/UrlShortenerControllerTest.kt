@@ -25,7 +25,7 @@ import kotlin.test.Test
 @ContextConfiguration(
     classes = [
         UrlShortenerControllerImpl::class,
-        RestResponseEntityExceptionHandler::class
+        ExceptionHandlers::class
     ]
 )
 class UrlShortenerControllerTest {
