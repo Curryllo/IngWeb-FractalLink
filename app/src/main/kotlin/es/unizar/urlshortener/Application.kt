@@ -1,3 +1,4 @@
+@file:Suppress("MaxLineLength")
 package es.unizar.urlshortener
 
 import org.springframework.boot.autoconfigure.SpringBootApplication

@@ -1,3 +1,4 @@
+@file:Suppress("MaxLineLength")
 package es.unizar.urlshortener.infrastructure.delivery
 
 import es.unizar.urlshortener.core.InvalidUrlException
@@ -27,7 +28,7 @@ import java.time.OffsetDateTime
  * @see <a href="https://www.rfc-editor.org/rfc/rfc9457">RFC 9457 - Problem Details for HTTP APIs</a>
  */
 @ControllerAdvice
-class RestResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
+class ExceptionHandlers : ResponseEntityExceptionHandler() {
 
     private val log = KotlinLogging.logger {}
 
