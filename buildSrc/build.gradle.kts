@@ -6,6 +6,8 @@ plugins {
 repositories {
     // Adds the Maven Central repository to the list of repositories.
     mavenCentral()
+    // Adds the Gradle Plugin Portal for resolving Gradle plugins (e.g., Detekt alpha versions).
+    gradlePluginPortal()
 }
 
 dependencies {

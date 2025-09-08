@@ -8,14 +8,14 @@ import es.unizar.urlshortener.core.*
  * Extension method to convert a [ClickEntity] into a domain [Click].
  */
 fun ClickEntity.toDomain() = Click(
-    hash = hash,
+    hash = UrlHash(hash),
     created = created,
     properties = ClickProperties(
-        ip = ip,
-        referrer = referrer,
-        browser = browser,
-        platform = platform,
-        country = country
+        ip = ip?.let { IpAddress(it) },
+        referrer = referrer?.let { Referrer(it) },
+        browser = browser?.let { Browser(it) },
+        platform = platform?.let { Platform(it) },
+        country = country?.let { CountryCode(it) }
     )
 )
 
@@ -24,31 +24,37 @@ fun ClickEntity.toDomain() = Click(
  */
 fun Click.toEntity() = ClickEntity(
     id = null,
-    hash = hash,
+    hash = hash.value,
     created = created,
-    ip = properties.ip,
-    referrer = properties.referrer,
-    browser = properties.browser,
-    platform = properties.platform,
-    country = properties.country
+    ip = properties.ip?.value,
+    referrer = properties.referrer?.value,
+    browser = properties.browser?.value,
+    platform = properties.platform?.value,
+    country = properties.country?.value
 )
 
 /**
  * Extension method to convert a [ShortUrlEntity] into a domain [ShortUrl].
  */
 fun ShortUrlEntity.toDomain() = ShortUrl(
-    hash = hash,
+    hash = UrlHash(hash),
     redirection = Redirection(
-        target = target,
-        mode = mode
+        target = Url(target),
+        type = when (mode) {
+            HttpStatusCodes.PERMANENT_REDIRECT -> RedirectionType.Permanent
+            else -> RedirectionType.Temporary
+        }
     ),
     created = created,
     properties = ShortUrlProperties(
-        sponsor = sponsor,
-        owner = owner,
-        safe = safe,
-        ip = ip,
-        country = country
+        sponsor = sponsor?.let { Sponsor(it) },
+        owner = owner?.let { Owner(it) },
+        safety = when (safe) {
+            true -> UrlSafety.Safe
+            false -> UrlSafety.Unsafe
+        },
+        ip = ip?.let { IpAddress(it) },
+        country = country?.let { CountryCode(it) }
     )
 )
 
@@ -56,13 +62,13 @@ fun ShortUrlEntity.toDomain() = ShortUrl(
  * Extension method to convert a domain [ShortUrl] into a [ShortUrlEntity].
  */
 fun ShortUrl.toEntity() = ShortUrlEntity(
-    hash = hash,
-    target = redirection.target,
-    mode = redirection.mode,
+    hash = hash.value,
+    target = redirection.target.value,
+    mode = redirection.statusCode,
     created = created,
-    owner = properties.owner,
-    sponsor = properties.sponsor,
-    safe = properties.safe,
-    ip = properties.ip,
-    country = properties.country
+    owner = properties.owner?.value,
+    sponsor = properties.sponsor?.value,
+    safe = properties.safety == UrlSafety.Safe,
+    ip = properties.ip?.value,
+    country = properties.country?.value
 )

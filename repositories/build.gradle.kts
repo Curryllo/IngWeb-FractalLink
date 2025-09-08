@@ -7,9 +7,6 @@ plugins {
 
     // Apply the Spring Boot plugin without automatically applying it
     alias(libs.plugins.spring.boot) apply false
-
-    // Apply the Spring Dependency Management plugin
-    alias(libs.plugins.spring.dependency.management)
 }
 
 dependencies {
@@ -20,18 +17,3 @@ dependencies {
     implementation(libs.spring.boot.starter.data.jpa)
 }
 
-dependencyManagement {
-    imports {
-        // Import the Spring Boot BOM (Bill of Materials) for dependency management
-        mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
-    }
-}
-
-configurations.matching { it.name == "detekt" }.all {
-    resolutionStrategy.eachDependency {
-        // Ensure that all dependencies from the org.jetbrains.kotlin group use version 1.9.23
-        if (requested.group == "org.jetbrains.kotlin") {
-            useVersion("1.9.23")
-        }
-    }
-}

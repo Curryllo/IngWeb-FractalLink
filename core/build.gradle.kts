@@ -4,6 +4,12 @@ plugins {
 }
 
 dependencies {
+    // Add Kotlin Logging for idiomatic Kotlin logging
+    implementation(libs.kotlin.logging)
+
+    // Add SLF4J Simple for logging implementation (version managed by Spring Boot BOM)
+    testImplementation(libs.slf4j.simple)
+
     // Add Kotlin test library for unit testing
     testImplementation(libs.kotlin.test)
 

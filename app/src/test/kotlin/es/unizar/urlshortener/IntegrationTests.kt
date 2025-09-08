@@ -65,7 +65,7 @@ class HttpRequestTest {
     fun `main page works`() {
         val response = restTemplate.getForEntity("http://localhost:$port/", String::class.java)
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(response.body).contains("A front-end example page for the project")
+        assertThat(response.body).contains("Transform long URLs into short, shareable links")
     }
 
     /**
@@ -132,6 +132,21 @@ class HttpRequestTest {
     }
 
     /**
+     * Tests that a basic redirect is created using multipart form data.
+     */
+    @Test
+    fun `creates returns a basic redirect using multipart form data`() {
+        val response = shortUrlMultipart("http://example.com/")
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
+        assertThat(response.headers.location).isEqualTo(URI.create("http://localhost:$port/f684a3c4"))
+        assertThat(response.body?.url).isEqualTo(URI.create("http://localhost:$port/f684a3c4"))
+
+        assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "shorturl")).isEqualTo(1)
+        assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "click")).isEqualTo(0)
+    }
+
+    /**
      * Creates a short URL for the given URL.
      * @param url The URL to shorten.
      * @return The response entity containing the short URL data.
@@ -139,6 +154,25 @@ class HttpRequestTest {
     private fun shortUrl(url: String): ResponseEntity<ShortUrlDataOut> {
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_FORM_URLENCODED
+
+        val data: MultiValueMap<String, String> = LinkedMultiValueMap()
+        data["url"] = url
+
+        return restTemplate.postForEntity(
+            "http://localhost:$port/api/link",
+            HttpEntity(data, headers),
+            ShortUrlDataOut::class.java
+        )
+    }
+
+    /**
+     * Creates a short URL for the given URL using multipart form data.
+     * @param url The URL to shorten.
+     * @return The response entity containing the short URL data.
+     */
+    private fun shortUrlMultipart(url: String): ResponseEntity<ShortUrlDataOut> {
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.MULTIPART_FORM_DATA
 
         val data: MultiValueMap<String, String> = LinkedMultiValueMap()
         data["url"] = url

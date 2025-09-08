@@ -1,75 +1,110 @@
 package es.unizar.urlshortener.infrastructure.delivery
 
 import es.unizar.urlshortener.core.InvalidUrlException
+import es.unizar.urlshortener.core.InvalidInputException
 import es.unizar.urlshortener.core.RedirectionNotFound
-import org.slf4j.LoggerFactory
+import es.unizar.urlshortener.core.InternalError
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
-import org.springframework.web.bind.annotation.ResponseBody
-import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
+import java.net.URI
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
 
 /**
- * A controller advice to handle exceptions globally and return appropriate HTTP responses.
+ * Global exception handler that implements Problem Details for HTTP APIs (RFC 9457).
+ * 
+ * This handler provides standardized error responses that include:
+ * - **type**: A URI reference that identifies the problem type
+ * - **title**: A short, human-readable summary of the problem type
+ * - **status**: The HTTP status code
+ * - **detail**: A human-readable explanation specific to this occurrence
+ * - **instance**: A URI reference that identifies the specific occurrence
+ * 
+ * @see <a href="https://www.rfc-editor.org/rfc/rfc9457">RFC 9457 - Problem Details for HTTP APIs</a>
  */
 @ControllerAdvice
 class RestResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
 
+    private val log = KotlinLogging.logger {}
+
     /**
-     * Handles InvalidUrlException and returns a BAD_REQUEST response.
+     * Handles InvalidUrlException and returns a BAD_REQUEST response with Problem Details.
      *
      * @param ex the InvalidUrlException thrown
-     * @return an ErrorMessage containing the status code and exception message
+     * @param request the WebRequest during which the exception was thrown
+     * @return a ProblemDetail following RFC 9457 format
      */
-    @ResponseBody
     @ExceptionHandler(value = [InvalidUrlException::class])
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun invalidUrls(ex: InvalidUrlException) = ErrorMessage(HttpStatus.BAD_REQUEST.value(), ex.message)
+    fun invalidUrls(ex: InvalidUrlException, request: WebRequest): ProblemDetail {
+        val problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.message ?: "Invalid URL format")
+        problemDetail.type = URI.create("https://urlshortener.example.com/problems/invalid-url")
+        problemDetail.title = "Invalid URL"
+        problemDetail.instance = URI.create(request.getDescription(false))
+        problemDetail.setProperty("timestamp", OffsetDateTime.now())
+        return problemDetail
+    }
 
     /**
-     * Handles RedirectionNotFound exception and returns a NOT_FOUND response.
+     * Handles InvalidInputException and returns a BAD_REQUEST response with Problem Details.
+     *
+     * @param ex the InvalidInputException thrown
+     * @param request the WebRequest during which the exception was thrown
+     * @return a ProblemDetail following RFC 9457 format
+     */
+    @ExceptionHandler(value = [InvalidInputException::class])
+    fun invalidInput(ex: InvalidInputException, request: WebRequest): ProblemDetail {
+        val problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.message ?: "Invalid input provided")
+        problemDetail.type = URI.create("https://urlshortener.example.com/problems/invalid-input")
+        problemDetail.title = "Invalid Input"
+        problemDetail.instance = URI.create(request.getDescription(false))
+        problemDetail.setProperty("timestamp", OffsetDateTime.now())
+        return problemDetail
+    }
+
+    /**
+     * Handles RedirectionNotFound exception and returns a NOT_FOUND response with Problem Details.
      *
      * @param ex the RedirectionNotFound exception thrown
-     * @return an ErrorMessage containing the status code and exception message
+     * @param request the WebRequest during which the exception was thrown
+     * @return a ProblemDetail following RFC 9457 format
      */
-    @ResponseBody
     @ExceptionHandler(value = [RedirectionNotFound::class])
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    fun redirectionNotFound(ex: RedirectionNotFound) = ErrorMessage(HttpStatus.NOT_FOUND.value(), ex.message)
+    fun redirectionNotFound(ex: RedirectionNotFound, request: WebRequest): ProblemDetail {
+        val problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.message ?: "Short URL not found")
+        problemDetail.type = URI.create("https://urlshortener.example.com/problems/redirection-not-found")
+        problemDetail.title = "Redirection Not Found"
+        problemDetail.instance = URI.create(request.getDescription(false))
+        problemDetail.setProperty("timestamp", OffsetDateTime.now())
+        return problemDetail
+    }
 
     /**
-     * Handles InternalError and returns an INTERNAL_SERVER_ERROR response.
+     * Handles InternalError and returns an INTERNAL_SERVER_ERROR response with Problem Details.
      *
      * @param ex the InternalError thrown
      * @param request the WebRequest during which the exception was thrown
-     * @return an ErrorMessage containing the status code and exception message
+     * @return a ProblemDetail following RFC 9457 format
      */
-    @ResponseBody
     @ExceptionHandler(value = [InternalError::class])
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    fun internalError(ex: InternalError, request: WebRequest): ErrorMessage {
-        log.error("Internal error: ${ex.message}, Request Details: ${request.getDescription(false)}", ex)
-        return ErrorMessage(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.message)
+    fun internalError(ex: InternalError, request: WebRequest): ProblemDetail {
+        log.error(ex) { "Internal error: ${ex.message}, Request Details: ${request.getDescription(false)}" }
+        val problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred")
+        problemDetail.type = URI.create("https://urlshortener.example.com/problems/internal-error")
+        problemDetail.title = "Internal Server Error"
+        problemDetail.instance = URI.create(request.getDescription(false))
+        problemDetail.setProperty("timestamp", OffsetDateTime.now())
+        problemDetail.setProperty("errorId", generateErrorId())
+        return problemDetail
     }
 
-    companion object {
-        private val log = LoggerFactory.getLogger(RestResponseEntityExceptionHandler::class.java)
-    }
+    /**
+     * Generates a unique error ID for tracking purposes.
+     * In a production environment, this would be a proper UUID or correlation ID.
+     */
+    private fun generateErrorId(): String = "ERR-${System.currentTimeMillis()}"
 }
 
-/**
- * Data class representing an error message to be returned in the response body.
- *
- * @property statusCode the HTTP status code
- * @property message the error message
- * @property timestamp the timestamp when the error occurred
- */
-data class ErrorMessage(
-    val statusCode: Int,
-    val message: String?,
-    val timestamp: String = DateTimeFormatter.ISO_DATE_TIME.format(OffsetDateTime.now())
-)

@@ -12,3 +12,13 @@ spring:
   jpa:
     # Disables the Open Session in View pattern.
     open-in-view: false
+
+# Actuator configuration
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health,info

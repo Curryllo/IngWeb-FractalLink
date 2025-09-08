@@ -1,3 +1,4 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
 plugins {
     // Applies the Kotlin JVM plugin to the project.
     kotlin("jvm")
@@ -13,6 +14,22 @@ kotlin {
 repositories {
     // Adds the Maven Central repository to the list of repositories.
     mavenCentral()
+}
+
+val catalogs = project.extensions.getByType<VersionCatalogsExtension>()
+val libs = catalogs.named("libs")
+
+dependencies {
+    // Import Spring Boot BOM via platform for implementation and test scopes.
+    val springBootVersion = libs.findVersion("springBoot").get().requiredVersion
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}"))
+    testImplementation(platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}"))
+
+    // Common test dependencies for all modules.
+    testImplementation(libs.findLibrary("kotlin-test").get())
+    testImplementation(libs.findLibrary("mockito-kotlin").get())
+    testImplementation(libs.findLibrary("junit-jupiter").get())
+    testRuntimeOnly(libs.findLibrary("junit-platform-launcher").get())
 }
 
 tasks {
