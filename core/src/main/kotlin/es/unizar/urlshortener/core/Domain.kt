@@ -255,5 +255,6 @@ data class ShortUrl(
     val hash: UrlHash,
     val redirection: Redirection,
     val created: OffsetDateTime = OffsetDateTime.now(),
-    val properties: ShortUrlProperties = ShortUrlProperties()
+    val properties: ShortUrlProperties = ShortUrlProperties(),
+    val qrCode: String = ""
 )

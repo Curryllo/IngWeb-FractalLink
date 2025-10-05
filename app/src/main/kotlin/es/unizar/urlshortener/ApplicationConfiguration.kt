@@ -9,6 +9,7 @@ import es.unizar.urlshortener.infrastructure.repositories.ClickEntityRepository
 import es.unizar.urlshortener.infrastructure.repositories.ClickRepositoryServiceImpl
 import es.unizar.urlshortener.infrastructure.repositories.ShortUrlEntityRepository
 import es.unizar.urlshortener.infrastructure.repositories.ShortUrlRepositoryServiceImpl
+import es.unizar.urlshortener.core.usecases.GenerateQRUseCaseImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -64,6 +65,13 @@ class ApplicationConfiguration(
      */
     @Bean
     fun logClickUseCase() = LogClickUseCaseImpl(clickRepositoryService())
+
+    /**
+     * Provides an implementation of the GenerateQRUseCase.
+     * @return an instance of GenerateQRUseCaseImpl.
+     */
+    @Bean
+    fun generateQRUseCase() = GenerateQRUseCaseImpl()
 
     /**
      * Provides an implementation of the CreateShortUrlUseCase.

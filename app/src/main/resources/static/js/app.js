@@ -39,7 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 return response.json().then(data => {
                     const shortURL = response.headers.get('Location') || data.url;
-                    showSuccess(shortURL);
+                    const qrCode = data.qrCode || '';
+                    showSuccess(shortURL, qrCode);
                 });
             } else {
                 return response.json().then(errorData => {
@@ -109,8 +110,9 @@ function setLoading(isLoading) {
 /**
  * Show success message with shortened URL
  * @param {string} shortURL - The shortened URL
+ * @param {string} qrCode - The QRCode
  */
-function showSuccess(shortURL) {
+function showSuccess(shortURL, qrCode) {
     document.getElementById('result').innerHTML = `
         <div class='alert alert-success lead'>
             <strong>Success!</strong> Your URL has been shortened:
@@ -118,6 +120,8 @@ function showSuccess(shortURL) {
             <a target='_blank' href='${shortURL}' style="color: white; text-decoration: underline; font-weight: 600;">
                 ${shortURL}
             </a>
+            <br><br>
+            <img src="${qrCode}" alt="QR Code" style="width:150px; height:150px;"/>
             <br><br>
             <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('${shortURL}')">
                 Copy URL

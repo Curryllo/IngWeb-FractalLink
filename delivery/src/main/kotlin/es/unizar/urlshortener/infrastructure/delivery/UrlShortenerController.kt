@@ -8,6 +8,7 @@ import es.unizar.urlshortener.core.UrlSafety
 import es.unizar.urlshortener.core.usecases.CreateShortUrlUseCase
 import es.unizar.urlshortener.core.usecases.LogClickUseCase
 import es.unizar.urlshortener.core.usecases.RedirectUseCase
+import es.unizar.urlshortener.core.usecases.GenerateQRUseCase
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -145,12 +146,13 @@ data class ShortUrlDataIn(
  * Response data transfer object for short URL creation.
  * 
  * This DTO represents the output data returned after successfully creating
- * a short URL. It provides both the short URL and additional metadata
- * for client applications.
+ * a short URL. It provides the short URL, additional metadata
+ * for client applications and its repesctive QR Code.
  * 
  * **Response Structure:**
  * - **url**: The complete short URL ready for use
  * - **properties**: Additional metadata (safety status, creation info, etc.)
+ * - **qrCode**: A base64-encoded QR code representing the short URL
  * 
  * **HTTP Response:**
  * - Status: 201 Created
@@ -163,7 +165,10 @@ data class ShortUrlDataOut(
     val url: URI? = null,
     
     @field:Schema(description = "Additional properties of the short URL")
-    val properties: Map<String, Any> = emptyMap()
+    val properties: Map<String, Any> = emptyMap(),
+
+    @field:Schema(description = "QR code representing the short URL")
+    val qrCode: String? = null
 )
 
 /**
@@ -204,7 +209,8 @@ data class ShortUrlDataOut(
 class UrlShortenerControllerImpl(
     val redirectUseCase: RedirectUseCase,
     val logClickUseCase: LogClickUseCase,
-    val createShortUrlUseCase: CreateShortUrlUseCase
+    val createShortUrlUseCase: CreateShortUrlUseCase,
+    val generateQRUseCase: GenerateQRUseCase
 ) : UrlShortenerController {
 
     private val logger = KotlinLogging.logger {}
@@ -322,11 +328,13 @@ class UrlShortenerControllerImpl(
             val h = HttpHeaders()
             val url = linkTo<UrlShortenerControllerImpl> { redirectTo(hash.value, request) }.toUri()
             h.location = url
+            val qrCode = generateQRUseCase.generate(data.url)
             val response = ShortUrlDataOut(
                 url = url,
                 properties = mapOf(
                     "safe" to (properties.safety == UrlSafety.Safe)
-                )
+                ),
+                qrCode = qrCode
             )
             ResponseEntity<ShortUrlDataOut>(response, h, HttpStatus.CREATED)
         }

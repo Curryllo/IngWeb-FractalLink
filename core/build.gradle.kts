@@ -7,6 +7,11 @@ dependencies {
     // Add Kotlin Logging for idiomatic Kotlin logging
     implementation(libs.kotlin.logging)
 
+    // QR code generation library
+    implementation("io.github.g0dkar:qrcode-kotlin:4.5.0")
+    // SVG generation library
+    implementation("org.jfree:org.jfree.svg:5.0.5")
+
     // Add SLF4J Simple for logging implementation (version managed by Spring Boot BOM)
     testImplementation(libs.slf4j.simple)
 
