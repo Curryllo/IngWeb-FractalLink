@@ -7,6 +7,7 @@ import es.unizar.urlshortener.core.usecases.CreateShortUrlUseCase
 import es.unizar.urlshortener.core.usecases.LogClickUseCase
 import es.unizar.urlshortener.core.usecases.RedirectUseCase
 import es.unizar.urlshortener.core.usecases.GenerateQRUseCase
+import es.unizar.urlshortener.infrastructure.delivery.RedirectionLimiterService
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.never
 import org.mockito.kotlin.verify
@@ -46,6 +47,9 @@ class UrlShortenerControllerTest {
     @MockitoBean
     private lateinit var generateQRUseCase: GenerateQRUseCase
 
+    @MockitoBean
+    private lateinit var redirectionLimiterService: RedirectionLimiterService
+    
     /**
      * Tests that `redirectTo` returns a redirect when the key exists.
      */
