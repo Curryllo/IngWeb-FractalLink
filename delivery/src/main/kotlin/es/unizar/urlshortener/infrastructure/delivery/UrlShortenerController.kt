@@ -211,6 +211,7 @@ class UrlShortenerControllerImpl(
     val logClickUseCase: LogClickUseCase,
     val createShortUrlUseCase: CreateShortUrlUseCase,
     val generateQRUseCase: GenerateQRUseCase
+    val limiter: RedirectionLimiterService
 ) : UrlShortenerController {
 
     private val logger = KotlinLogging.logger {}
@@ -253,6 +254,12 @@ class UrlShortenerControllerImpl(
         request: HttpServletRequest
     ): ResponseEntity<Unit> =
         redirectUseCase.redirectTo(id).run {
+
+            // Verify redirection limit
+            if (!limiter.isAllowed(id)) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build()
+            }
+
             logger.info { "Redirecting key '$id' to '${target.value}' with status ${statusCode}" }
             logClickUseCase.logClick(
                 id, 
