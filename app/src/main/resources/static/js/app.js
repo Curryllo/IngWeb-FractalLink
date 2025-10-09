@@ -121,7 +121,10 @@ function showSuccess(shortURL, qrCode) {
                 ${shortURL}
             </a>
             <br><br>
-            <img src="${qrCode}" alt="QR Code" style="width:150px; height:150px;"/>
+            <!-- <img src="${qrCode}" alt="QR Code" style="width:150px; height:150px;"/> -->
+            <button class="btn btn-sm btn-outline-secondary" onclick="window.open('${qrCode}', '_blank')">
+                Generate QR Code
+            </button>
             <br><br>
             <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('${shortURL}')">
                 Copy URL

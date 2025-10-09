@@ -1,6 +1,7 @@
 package es.unizar.urlshortener.core
 
 import java.time.OffsetDateTime
+import java.time.Instant
 
 /**
  * HTTP status codes used in the application.
@@ -218,7 +219,8 @@ data class ShortUrlProperties(
     val sponsor: Sponsor? = null,
     val safety: UrlSafety = UrlSafety.Unknown,
     val owner: Owner? = null,
-    val country: CountryCode? = null
+    val country: CountryCode? = null,
+    val createdAt: String = Instant.now().toString()
 ) {
     @Deprecated("Use safety property instead", ReplaceWith("safety"))
     val safe: Boolean get() = safety == UrlSafety.Safe
