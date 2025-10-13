@@ -1,6 +1,8 @@
 package es.unizar.urlshortener.core
 
 import java.time.OffsetDateTime
+import java.time.Instant
+import java.net.URI
 
 /**
  * HTTP status codes used in the application.
@@ -218,11 +220,19 @@ data class ShortUrlProperties(
     val sponsor: Sponsor? = null,
     val safety: UrlSafety = UrlSafety.Unknown,
     val owner: Owner? = null,
-    val country: CountryCode? = null
+    val country: CountryCode? = null,
+    val createdAt: String = Instant.now().toString(),
+    val originalUrl: String = "" 
 ) {
     @Deprecated("Use safety property instead", ReplaceWith("safety"))
     val safe: Boolean get() = safety == UrlSafety.Safe
 }
+
+data class ShortUrlQrCode(
+    val url: URI? = null,
+    val formats: String = "svg",
+    val size: String = "200x200"
+)
 
 /**
  * A [ClickProperties] is the bag of properties that a [Click] may have.
@@ -256,5 +266,5 @@ data class ShortUrl(
     val redirection: Redirection,
     val created: OffsetDateTime = OffsetDateTime.now(),
     val properties: ShortUrlProperties = ShortUrlProperties(),
-    val qrCode: String = ""
+    val qrCode: ShortUrlQrCode = ShortUrlQrCode()
 )

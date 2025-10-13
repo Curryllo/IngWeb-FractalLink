@@ -1,5 +1,6 @@
 package es.unizar.urlshortener.infrastructure.delivery
 
+import es.unizar.urlshortener.core.ShortUrlQrCode
 import es.unizar.urlshortener.core.ClickProperties
 import es.unizar.urlshortener.core.ShortUrlProperties
 import es.unizar.urlshortener.core.IpAddress
@@ -84,6 +85,8 @@ interface UrlShortenerController {
      */
     fun redirectTo(id: String, request: HttpServletRequest): ResponseEntity<Unit>
 
+    fun redirectToQR(id: String, request: HttpServletRequest): ResponseEntity<String>
+
     /**
      * Creates new short URLs from long URLs.
      * 
@@ -167,8 +170,11 @@ data class ShortUrlDataOut(
     @field:Schema(description = "Additional properties of the short URL")
     val properties: Map<String, Any> = emptyMap(),
 
-    @field:Schema(description = "QR code representing the short URL")
-    val qrCode: String? = null
+    //@field:Schema(description = "QR code representing the short URL")
+    //val qrCode: String? = null
+
+    @field:Schema(description = "QR code information")
+    val qrCode: Map<String, Any> = emptyMap()
 )
 
 /**
@@ -263,6 +269,60 @@ class UrlShortenerControllerImpl(
             ResponseEntity<Unit>(h, HttpStatus.valueOf(statusCode))
         }
 
+    @GetMapping("/{id:(?!api|index).*}/qr")
+    override fun redirectToQR(
+        @Parameter(description = "The short URL identifier", example = "f684a3c4")
+        @PathVariable id: String, 
+        request: HttpServletRequest
+    ): ResponseEntity<String> {
+        val redirection = redirectUseCase.redirectTo(id)
+        val original = redirection.target.value
+
+        
+        val qrCode = generateQRUseCase.generate(original)
+
+        val htmlPage = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <title>QR Code</title>
+                <meta content="width=device-width, initial-scale=1.0" name="viewport">
+                <link href="/webjars/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet"
+                    type="text/css"/>
+                <script src="/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
+                        type="text/javascript"></script>
+                </script>
+            </head>
+            <body>
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h1>QR Code</h1>
+                            <p class="lead">Scan it and browse to the website</p>
+                        <br>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <div class="row justify-content-center">
+                            <div class="col-sm-8 col-md-6 col-lg-4 text-center">
+                                <br/>
+                                <img src="${qrCode}" alt="QR Code" style="width:150px; height:150px;"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </body>
+            </html>
+        """.trimIndent()
+
+        return ResponseEntity.ok()
+        .contentType(MediaType.TEXT_HTML)
+        .body(htmlPage)
+    }
+        
+        
     /**
      * Creates a short url from details provided in [data].
      *
@@ -324,17 +384,26 @@ class UrlShortenerControllerImpl(
                 sponsor = data.sponsor?.takeIf { it.isNotBlank() }?.let { Sponsor(it) }
             )
         ).run {
-            logger.info { "Created short URL with hash '${hash.value}' for URL '${data.url}'" }
             val h = HttpHeaders()
             val url = linkTo<UrlShortenerControllerImpl> { redirectTo(hash.value, request) }.toUri()
             h.location = url
-            val qrCode = generateQRUseCase.generate(data.url)
+
+            
+            val urlQR = linkTo<UrlShortenerControllerImpl> { redirectToQR(hash.value, request) }.toUri()
+            
+            
             val response = ShortUrlDataOut(
                 url = url,
                 properties = mapOf(
-                    "safe" to (properties.safety == UrlSafety.Safe)
+                    "safe" to (properties.safety == UrlSafety.Safe),
+                    "createdAt" to properties.createdAt,
+                    "originalUrl" to data.url
                 ),
-                qrCode = qrCode
+                qrCode = mapOf(
+                    "url" to urlQR,
+                    "formats" to qrCode.formats,
+                    "defaultSize" to qrCode.size
+                )
             )
             ResponseEntity<ShortUrlDataOut>(response, h, HttpStatus.CREATED)
         }
