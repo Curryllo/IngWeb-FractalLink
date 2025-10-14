@@ -269,6 +269,31 @@ class UrlShortenerControllerImpl(
             ResponseEntity<Unit>(h, HttpStatus.valueOf(statusCode))
         }
 
+    /**
+     * Generates the QR page identified by its [id]
+     *
+     * @param id the identifier of the short url
+     * @param request the HTTP request
+     * @return a ResponseEntity with the HTML
+     */
+    @Operation(
+        summary = "Generate QR page",
+        description = "Generates the QR page associated with the short URL identifier"
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "QR page generated correctly",
+                content = [Content()]
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Page not found",
+                content = [Content()]
+            )
+        ]
+    )
     @GetMapping("/{id:(?!api|index).*}/qr")
     override fun redirectToQR(
         @Parameter(description = "The short URL identifier", example = "f684a3c4")

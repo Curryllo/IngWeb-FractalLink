@@ -231,7 +231,7 @@ data class ShortUrlProperties(
 data class ShortUrlQrCode(
     val url: URI? = null,
     val formats: String = "svg",
-    val size: String = "200x200"
+    val size: String = "150x150"
 )
 
 /**

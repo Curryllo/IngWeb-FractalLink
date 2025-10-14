@@ -39,8 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 return response.json().then(data => {
                     const shortURL = response.headers.get('Location') || data.url;
-                    const qrCode = data.qrCode || '';
-                    showSuccess(shortURL, qrCode);
+                    showSuccess(shortURL);
                 });
             } else {
                 return response.json().then(errorData => {
@@ -110,9 +109,8 @@ function setLoading(isLoading) {
 /**
  * Show success message with shortened URL
  * @param {string} shortURL - The shortened URL
- * @param {string} qrCode - The QRCode
  */
-function showSuccess(shortURL, qrCode) {
+function showSuccess(shortURL) {
     let qrURL = shortURL.concat("/qr");
     document.getElementById('result').innerHTML = `
         <div class='alert alert-success lead'>
