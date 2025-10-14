@@ -45,7 +45,8 @@ interface CreateShortUrlUseCase {
 class CreateShortUrlUseCaseImpl(
     private val shortUrlRepository: ShortUrlRepositoryService,
     private val validatorService: ValidatorService,
-    private val hashService: HashService
+    private val hashService: HashService,
+    private val reachabilityCheckUseCase: URLReachabilityCheckUseCase
 ) : CreateShortUrlUseCase {
     /**
      * Creates a short URL for the given URL and optional data.
@@ -59,6 +60,11 @@ class CreateShortUrlUseCaseImpl(
     override fun create(url: String, data: ShortUrlProperties): ShortUrl {
         // Sanitize basic input constraints
         val sanitizedUrl = sanitizeInput(url, "url", InputLimits.MAX_URL_LENGTH)
+
+        // Check if URL is reachable
+        if (!reachabilityCheckUseCase.check(sanitizedUrl)) {
+            throw InvalidUrlException("URL is not reachable: $sanitizedUrl")
+        }
         
         // Use validatorService for URL format validation
         return if (safeCall { validatorService.isValid(sanitizedUrl) }) {

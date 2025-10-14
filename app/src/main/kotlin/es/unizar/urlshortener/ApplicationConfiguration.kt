@@ -10,6 +10,8 @@ import es.unizar.urlshortener.infrastructure.repositories.ClickRepositoryService
 import es.unizar.urlshortener.infrastructure.repositories.ShortUrlEntityRepository
 import es.unizar.urlshortener.infrastructure.repositories.ShortUrlRepositoryServiceImpl
 import es.unizar.urlshortener.core.usecases.GenerateQRUseCaseImpl
+import es.unizar.urlshortener.core.usecases.URLReachabilityCheckUseCase
+import es.unizar.urlshortener.core.usecases.URLReachabilityCheckUseCaseImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -79,5 +81,13 @@ class ApplicationConfiguration(
      */
     @Bean
     fun createShortUrlUseCase() =
-        CreateShortUrlUseCaseImpl(shortUrlRepositoryService(), validatorService(), hashService())
+        CreateShortUrlUseCaseImpl(shortUrlRepositoryService(), validatorService(), hashService(), URLReachabilityCheckUseCase())
+
+
+    /**
+     * Provides an implementation of the URLReachabilityCheckUseCase.
+     * @return an instance of URLReachabilityCheckUseCaseImpl.
+     */
+    @Bean
+    fun URLReachabilityCheckUseCase() = URLReachabilityCheckUseCaseImpl()
 }
