@@ -85,7 +85,20 @@ interface UrlShortenerController {
      */
     fun redirectTo(id: String, request: HttpServletRequest): ResponseEntity<Unit>
 
-    fun redirectToQR(id: String, request: HttpServletRequest): ResponseEntity<String>
+    /**
+     * Generates the QR page from the given URL
+     * **HTTP Semantics:**
+     * - Returns 200 (Ok)
+     * - Returns 404 (Not Found) if short URL doesn't exist
+     *
+    * **Performance Considerations:**
+     * - It is called in every shortening action
+     *
+     * @param id The short URL hash key to redirect
+     * @param request The HTTP request containing client information
+     * @return HTTP redirect response or error response
+     */
+    fun generateQR(id: String, request: HttpServletRequest): ResponseEntity<String>
 
     /**
      * Creates new short URLs from long URLs.
@@ -295,7 +308,7 @@ class UrlShortenerControllerImpl(
         ]
     )
     @GetMapping("/{id:(?!api|index).*}/qr")
-    override fun redirectToQR(
+    override fun generateQR(
         @Parameter(description = "The short URL identifier", example = "f684a3c4")
         @PathVariable id: String, 
         request: HttpServletRequest
@@ -304,7 +317,12 @@ class UrlShortenerControllerImpl(
         val original = redirection.target.value
 
         
-        val qrCode = generateQRUseCase.generate(original)
+        val qrCode = try {
+            generateQRUseCase.generate(original)
+        } catch (e: Exception){
+            
+        }
+
 
         val htmlPage = """
             <!DOCTYPE html>
@@ -409,12 +427,13 @@ class UrlShortenerControllerImpl(
                 sponsor = data.sponsor?.takeIf { it.isNotBlank() }?.let { Sponsor(it) }
             )
         ).run {
+            logger.info { "Created short URL with hash '${hash.value}' for URL '${data.url}'" }
             val h = HttpHeaders()
             val url = linkTo<UrlShortenerControllerImpl> { redirectTo(hash.value, request) }.toUri()
             h.location = url
 
             
-            val urlQR = linkTo<UrlShortenerControllerImpl> { redirectToQR(hash.value, request) }.toUri()
+            val urlQR = linkTo<UrlShortenerControllerImpl> { generateQR(hash.value, request) }.toUri()
             
             
             val response = ShortUrlDataOut(

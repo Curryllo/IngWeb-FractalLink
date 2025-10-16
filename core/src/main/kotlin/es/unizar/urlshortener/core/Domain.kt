@@ -228,6 +228,10 @@ data class ShortUrlProperties(
     val safe: Boolean get() = safety == UrlSafety.Safe
 }
 
+/**
+ * A [ShortUrlQrCode] is the bag of properties that a [ShortUrl] needs.
+ * Uses value objects for type safety.
+ */
 data class ShortUrlQrCode(
     val url: URI? = null,
     val formats: String = "svg",

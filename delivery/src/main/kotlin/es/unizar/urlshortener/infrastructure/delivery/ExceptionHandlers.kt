@@ -5,6 +5,7 @@ import es.unizar.urlshortener.core.InvalidUrlException
 import es.unizar.urlshortener.core.InvalidInputException
 import es.unizar.urlshortener.core.RedirectionNotFound
 import es.unizar.urlshortener.core.InternalError
+import es.unizar.urlshortener.core.QrGenerationFailed
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
@@ -101,6 +102,27 @@ class ExceptionHandlers : ResponseEntityExceptionHandler() {
         problemDetail.setProperty("errorId", generateErrorId())
         return problemDetail
     }
+
+    /*
+    @ExceptionHandler(value = [QrGenerationFailed::class])
+    fun qrGenerationFailed(ex: QrGenerationFailed, request: WebRequest): ProblemDetail {
+        val problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred")
+        problemDetail.type = URI.create("https://api.urlshortener.unizar.es/problems/qr-generation-failed")
+        problemDetail.title = "QR Code Generation Failed"
+        problemDetail.instance = URI.create(request.getDescription(false))
+        problemDetail.setProperty("status", "500")
+        problemDetail.setProperty("detail", "Unable to generateQRcodeforthespecifiedURL")
+        problemDetail.setProperty("instance", "500")
+        problemDetail.setProperty("timestamp", ex.timestamp)
+        problemDetail.setProperty("url", ex.url)
+        problemDetail.setProperty("qrGenerationInfo", mapOf<String, Any>(
+            "error" to ex.qrGenerationFailed.error,
+            "retryAfter" to ex.qrGenerationFailed.retryAfter,
+            "errorType" to ex.qrGenerationFailed.errorType
+        ))
+        return problemDetail
+    }
+     */
 
     /**
      * Generates a unique error ID for tracking purposes.
