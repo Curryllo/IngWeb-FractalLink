@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
 @Service
 class RedirectionLimiterService(
 
-    @param:Value("\${app.redirection.max:5}")
+    @param:Value("\${app.redirection.max:100}")
     private val maxRedirects: Int,
 
     @param:Value("\${app.redirection.windowSeconds:3600}")
