@@ -98,7 +98,7 @@ interface UrlShortenerController {
      * @param request The HTTP request containing client information
      * @return HTTP redirect response or error response
      */
-    fun generateQR(id: String, request: HttpServletRequest): ResponseEntity<String>
+    fun generateQR(id: String, request: HttpServletRequest): ResponseEntity<ByteArray>
 
     /**
      * Creates new short URLs from long URLs.
@@ -312,57 +312,16 @@ class UrlShortenerControllerImpl(
         @Parameter(description = "The short URL identifier", example = "f684a3c4")
         @PathVariable id: String, 
         request: HttpServletRequest
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ByteArray> {
         val redirection = redirectUseCase.redirectTo(id)
         val original = redirection.target.value
 
         
-        val qrCode = try {
-            generateQRUseCase.generate(original)
-        } catch (e: Exception){
-            
-        }
-
-
-        val htmlPage = """
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <title>QR Code</title>
-                <meta content="width=device-width, initial-scale=1.0" name="viewport">
-                <link href="/webjars/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet"
-                    type="text/css"/>
-                <script src="/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
-                        type="text/javascript"></script>
-                </script>
-            </head>
-            <body>
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-12 text-center">
-                        <h1>QR Code</h1>
-                            <p class="lead">Scan it and browse to the website</p>
-                        <br>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 text-center">
-                        <div class="row justify-content-center">
-                            <div class="col-sm-8 col-md-6 col-lg-4 text-center">
-                                <br/>
-                                <img src="${qrCode}" alt="QR Code" style="width:150px; height:150px;"/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            </body>
-            </html>
-        """.trimIndent()
+        val qrCode = generateQRUseCase.generate(original)
 
         return ResponseEntity.ok()
-        .contentType(MediaType.TEXT_HTML)
-        .body(htmlPage)
+        .contentType(MediaType.valueOf("image/svg+xml"))
+        .body(qrCode)
     }
         
         
