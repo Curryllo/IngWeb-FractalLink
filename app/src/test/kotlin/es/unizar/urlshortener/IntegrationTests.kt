@@ -189,10 +189,8 @@ class HttpRequestTest {
         val target = shortUrl("http://example.com/").headers.location
         require(target != null)
         val key = "f684a3c4"
-
         val qrCode = restTemplate.getForEntity("http://localhost:$port/$key/qr", String::class.java)
 
         assertThat(qrCode.headers.contentType).isEqualTo(MediaType("image", "svg+xml"))
-
     }
 }

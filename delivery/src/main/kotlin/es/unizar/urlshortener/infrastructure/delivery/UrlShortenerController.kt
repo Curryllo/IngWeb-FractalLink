@@ -86,7 +86,7 @@ interface UrlShortenerController {
     fun redirectTo(id: String, request: HttpServletRequest): ResponseEntity<Unit>
 
     /**
-     * Generates the QR page from the given URL
+     * Generates the QR from the given URL
      * **HTTP Semantics:**
      * - Returns 200 (Ok)
      * - Returns 404 (Not Found) if short URL doesn't exist
@@ -283,7 +283,7 @@ class UrlShortenerControllerImpl(
         }
 
     /**
-     * Generates the QR page identified by its [id]
+     * Generates the QR identified by its [id]
      *
      * @param id the identifier of the short url
      * @param request the HTTP request
