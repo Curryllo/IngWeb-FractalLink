@@ -39,8 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 return response.json().then(data => {
                     const shortURL = response.headers.get('Location') || data.url;
-                    const qrCode = data.qrCode || '';
-                    showSuccess(shortURL, qrCode);
+                    showSuccess(shortURL);
                 });
             } else {
                 return response.json().then(errorData => {
@@ -110,9 +109,9 @@ function setLoading(isLoading) {
 /**
  * Show success message with shortened URL
  * @param {string} shortURL - The shortened URL
- * @param {string} qrCode - The QRCode
  */
-function showSuccess(shortURL, qrCode) {
+function showSuccess(shortURL) {
+    let qrURL = shortURL.concat("/qr");
     document.getElementById('result').innerHTML = `
         <div class='alert alert-success lead'>
             <strong>Success!</strong> Your URL has been shortened:
@@ -121,10 +120,9 @@ function showSuccess(shortURL, qrCode) {
                 ${shortURL}
             </a>
             <br><br>
-            <!-- <img src="${qrCode}" alt="QR Code" style="width:150px; height:150px;"/> -->
-            <button class="btn btn-sm btn-outline-secondary" onclick="window.open('${qrCode}', '_blank')">
-                Generate QR Code
-            </button>
+            <a target='_blank' href='${qrURL}' style="color: white; text-decoration: underline; font-weight: 600;">
+                ${qrURL}
+            </a>
             <br><br>
             <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('${shortURL}')">
                 Copy URL

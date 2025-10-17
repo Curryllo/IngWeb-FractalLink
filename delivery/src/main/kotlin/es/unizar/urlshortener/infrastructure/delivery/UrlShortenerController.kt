@@ -1,5 +1,6 @@
 package es.unizar.urlshortener.infrastructure.delivery
 
+import es.unizar.urlshortener.core.ShortUrlQrCode
 import es.unizar.urlshortener.core.ClickProperties
 import es.unizar.urlshortener.core.ShortUrlProperties
 import es.unizar.urlshortener.core.IpAddress
@@ -87,6 +88,21 @@ interface UrlShortenerController {
     fun redirectTo(id: String, request: HttpServletRequest): ResponseEntity<Any>
 
     /**
+     * Generates the QR from the given URL
+     * **HTTP Semantics:**
+     * - Returns 200 (Ok)
+     * - Returns 404 (Not Found) if short URL doesn't exist
+     *
+    * **Performance Considerations:**
+     * - It is called in every shortening action
+     *
+     * @param id The short URL hash key to redirect
+     * @param request The HTTP request containing client information
+     * @return HTTP redirect response or error response
+     */
+    fun generateQR(id: String, request: HttpServletRequest): ResponseEntity<ByteArray>
+
+    /**
      * Creates new short URLs from long URLs.
      * 
      * This endpoint handles the creation of short URLs, accepting a long URL
@@ -169,8 +185,11 @@ data class ShortUrlDataOut(
     @field:Schema(description = "Additional properties of the short URL")
     val properties: Map<String, Any> = emptyMap(),
 
-    @field:Schema(description = "QR code representing the short URL")
-    val qrCode: String? = null
+    //@field:Schema(description = "QR code representing the short URL")
+    //val qrCode: String? = null
+
+    @field:Schema(description = "QR code information")
+    val qrCode: Map<String, Any> = emptyMap()
 )
 
 /**
@@ -292,6 +311,49 @@ class UrlShortenerControllerImpl(
         }
 
     /**
+     * Generates the QR identified by its [id]
+     *
+     * @param id the identifier of the short url
+     * @param request the HTTP request
+     * @return a ResponseEntity with the HTML
+     */
+    @Operation(
+        summary = "Generate QR page",
+        description = "Generates the QR page associated with the short URL identifier"
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "QR page generated correctly",
+                content = [Content()]
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Page not found",
+                content = [Content()]
+            )
+        ]
+    )
+    @GetMapping("/{id:(?!api|index).*}/qr")
+    override fun generateQR(
+        @Parameter(description = "The short URL identifier", example = "f684a3c4")
+        @PathVariable id: String, 
+        request: HttpServletRequest
+    ): ResponseEntity<ByteArray> {
+        val redirection = redirectUseCase.redirectTo(id)
+        val original = redirection.target.value
+
+        
+        val qrCode = generateQRUseCase.generate(original)
+
+        return ResponseEntity.ok()
+        .contentType(MediaType.valueOf("image/svg+xml"))
+        .body(qrCode)
+    }
+        
+        
+    /**
      * Creates a short url from details provided in [data].
      *
      * @param data the data required to create a short url
@@ -356,14 +418,23 @@ class UrlShortenerControllerImpl(
             val h = HttpHeaders()
             val url = linkTo<UrlShortenerControllerImpl> { redirectTo(hash.value, request) }.toUri()
             h.location = url
-            val qrCode = generateQRUseCase.generate(data.url)
+
+            
+            val urlQR = linkTo<UrlShortenerControllerImpl> { generateQR(hash.value, request) }.toUri()
+            
+            
             val response = ShortUrlDataOut(
                 url = url,
                 properties = mapOf(
                     "safe" to (properties.safety == UrlSafety.Safe),
-                    "createdAt" to properties.createdAt
+                    "createdAt" to properties.createdAt,
+                    "originalUrl" to data.url
                 ),
-                qrCode = qrCode
+                qrCode = mapOf(
+                    "url" to urlQR,
+                    "formats" to qrCode.formats,
+                    "defaultSize" to qrCode.size
+                )
             )
             ResponseEntity<ShortUrlDataOut>(response, h, HttpStatus.CREATED)
         }

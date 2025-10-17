@@ -56,7 +56,7 @@ fun ShortUrlEntity.toDomain() = ShortUrl(
         ip = ip?.let { IpAddress(it) },
         country = country?.let { CountryCode(it) }
     ),
-    qrCode = ""
+    qrCode = ShortUrlQrCode()
 )
 
 /**
