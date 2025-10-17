@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
+import java.time.Instant
+
 
 /**
  * REST API controller interface for the URL Shortener application.
@@ -82,7 +84,7 @@ interface UrlShortenerController {
      * @param request The HTTP request containing client information
      * @return HTTP redirect response or error response
      */
-    fun redirectTo(id: String, request: HttpServletRequest): ResponseEntity<Unit>
+    fun redirectTo(id: String, request: HttpServletRequest): ResponseEntity<Any>
 
     /**
      * Creates new short URLs from long URLs.
@@ -252,13 +254,32 @@ class UrlShortenerControllerImpl(
         @Parameter(description = "The short URL identifier", example = "f684a3c4")
         @PathVariable id: String, 
         request: HttpServletRequest
-    ): ResponseEntity<Unit> =
+    ): ResponseEntity<Any> =
         redirectUseCase.redirectTo(id).run {
 
-            // Verify redirection limit
-            if (!limiter.isAllowed(id)) {
-                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build()
-            }
+            // Check redirection limits
+        if (!limiter.isAllowed(id)) {
+            val timestamp = Instant.now().toString()
+            val body = mapOf(
+                "type" to "https://api.urlshortener.unizar.es/problems/redirection-limit-exceeded",
+                "title" to "Redirection Limit Exceeded",
+                "status" to 429,
+                "detail" to "Maximum number of redirections exceeded for this URL",
+                "instance" to "/$id",
+                "timestamp" to timestamp,
+                "url" to "http://localhost:8080/$id",
+                "limits" to mapOf(
+                    "maxRedirects" to limiter.getMaxRedirects(),
+                    "currentRedirects" to limiter.currentRedirects(id),
+                    "timeWindow" to "${limiter.getWindowSeconds()/3600}h",
+                    "resetAt" to limiter.resetAt(id)?.toString(),
+                    "errorType" to "LIMIT_EXCEEDED"
+                )
+            )
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+        }
 
             logger.info { "Redirecting key '$id' to '${target.value}' with status ${statusCode}" }
             logClickUseCase.logClick(
@@ -267,7 +288,7 @@ class UrlShortenerControllerImpl(
             )
             val h = HttpHeaders()
             h.location = URI.create(target.value)
-            ResponseEntity<Unit>(h, HttpStatus.valueOf(statusCode))
+            ResponseEntity<Any>(h, HttpStatus.valueOf(statusCode))
         }
 
     /**
