@@ -23,6 +23,10 @@ dependencies {
     implementation(libs.bootstrap)
     // Adds OpenAPI/Swagger documentation as an implementation dependency.
     implementation(libs.springdoc.openapi)
+    
+    // Adds Spring Dotenv for environment variable management.
+    implementation("me.paulschwarz:spring-dotenv:4.0.0")
+
 
     // Adds HSQLDB as a runtime-only dependency.
     runtimeOnly(libs.hsqldb)

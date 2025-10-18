@@ -23,7 +23,7 @@ management:
       exposure:
         include: health,info
 
-# Google Safe Browsing API configuration
+# Google Safe Browsing API configuration     
 google:
   api:
-    key: "AIzaSyA-vWqeVvRaan1aT5aFy-nfw_Iw1Ac56q0"
+    key: ${GOOGLE_API_KEY}

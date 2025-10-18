@@ -39,5 +39,8 @@ out/
 ### Cuarto ###
 README_files
 
+### Environment ###
+.env
+
 ### Other ###
 .DS_Store

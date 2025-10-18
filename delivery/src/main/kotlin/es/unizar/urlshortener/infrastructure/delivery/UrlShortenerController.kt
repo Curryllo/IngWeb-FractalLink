@@ -232,7 +232,8 @@ class UrlShortenerControllerImpl(
     val logClickUseCase: LogClickUseCase,
     val createShortUrlUseCase: CreateShortUrlUseCase,
     val generateQRUseCase: GenerateQRUseCase,
-    val limiter: RedirectionLimiterService
+    val limiter: RedirectionLimiterService,
+    val safeBrowsingService: SafeBrowsingService
 ) : UrlShortenerController {
 
     private val logger = KotlinLogging.logger {}
@@ -406,7 +407,31 @@ class UrlShortenerControllerImpl(
         @Parameter(description = "The data required to create a short URL")
         data: ShortUrlDataIn, 
         request: HttpServletRequest
-    ): ResponseEntity<ShortUrlDataOut> =
+    ): ResponseEntity<ShortUrlDataOut> {
+
+        // Verify if the URL is safe
+        if (!safeBrowsingService.isSafe(data.url)) {
+            val timestamp = Instant.now().toString()
+            val response = ShortUrlDataOut(
+                url = null, // No se crea short URL
+                properties = mapOf(
+                    "type" to "https://api.urlshortener.unizar.es/problems/unsafe-url",
+                    "title" to "Unsafe URL Detected",
+                    "status" to 400,
+                    "detail" to "The provided URL has been flagged as unsafe by Google Safe Browsing",
+                    "instance" to "/api/link",
+                    "timestamp" to timestamp,
+                    "url" to data.url,
+                    "safetyCheck" to mapOf(
+                        "threatTypes" to safeBrowsingService.getThreatTypes(),
+                        "platformTypes" to safeBrowsingService.getPlatformTypes(),
+                        "errorType" to "UNSAFE_URL"
+                    )
+                ),
+                qrCode = emptyMap()
+            )
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
+        }
         createShortUrlUseCase.create(
             url = data.url,
             data = ShortUrlProperties(
@@ -436,6 +461,7 @@ class UrlShortenerControllerImpl(
                     "defaultSize" to qrCode.size
                 )
             )
-            ResponseEntity<ShortUrlDataOut>(response, h, HttpStatus.CREATED)
+            return ResponseEntity<ShortUrlDataOut>(response, h, HttpStatus.CREATED)
         }
+    }
 }
