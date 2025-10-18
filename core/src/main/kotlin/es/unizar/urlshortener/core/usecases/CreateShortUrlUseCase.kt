@@ -61,8 +61,12 @@ class CreateShortUrlUseCaseImpl(
         // Sanitize basic input constraints
         val sanitizedUrl = sanitizeInput(url, "url", InputLimits.MAX_URL_LENGTH)
 
+        val reachability = reachabilityCheckUseCase.check(sanitizedUrl)
+        // Print reachability result for debugging
+        println("Reachability check result: $reachability")
+
         // Check if URL is reachable
-        if (!reachabilityCheckUseCase.check(sanitizedUrl)) {
+        if (!reachability.reachable) {
             throw InvalidUrlException("URL is not reachable: $sanitizedUrl")
         }
         
