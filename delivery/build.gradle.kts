@@ -34,6 +34,8 @@ dependencies {
     // Include OpenAPI/Swagger documentation as an implementation dependency
     implementation(libs.springdoc.openapi)
 
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
     // Include Spring Boot Starter Test as a test implementation dependency
     testImplementation(libs.spring.boot.starter.test)
 }

@@ -451,7 +451,7 @@ class UrlShortenerControllerImpl(
             val response = ShortUrlDataOut(
                 url = url,
                 properties = mapOf(
-                    "safe" to (properties.safety == UrlSafety.Safe),
+                    "safe" to true,
                     "createdAt" to properties.createdAt,
                     "originalUrl" to data.url
                 ),

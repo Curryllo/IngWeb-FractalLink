@@ -13,6 +13,11 @@ spring:
     # Disables the Open Session in View pattern.
     open-in-view: false
 
+# Google Safe Browsing API configuration     
+google:
+  api:
+    key: ${GOOGLE_API_KEY}
+
 # Actuator configuration
 management:
   endpoint:
@@ -22,8 +27,3 @@ management:
     web:
       exposure:
         include: health,info
-
-# Google Safe Browsing API configuration     
-google:
-  api:
-    key: ${GOOGLE_API_KEY}
