@@ -43,12 +43,6 @@ class UrlShortenerControllerTest {
 
     @MockitoBean
     private lateinit var createShortUrlUseCase: CreateShortUrlUseCase
-
-    @MockitoBean
-    private lateinit var generateQRUseCase: GenerateQRUseCase
-
-    @MockitoBean
-    private lateinit var redirectionLimiterService: RedirectionLimiterService
     
     /**
      * Tests that `redirectTo` returns a redirect when the key exists.

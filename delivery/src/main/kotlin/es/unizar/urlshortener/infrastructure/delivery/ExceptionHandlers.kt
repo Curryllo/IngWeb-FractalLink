@@ -5,7 +5,7 @@ import es.unizar.urlshortener.core.InvalidUrlException
 import es.unizar.urlshortener.core.InvalidInputException
 import es.unizar.urlshortener.core.RedirectionNotFound
 import es.unizar.urlshortener.core.InternalError
-import es.unizar.urlshortener.core.QrGenerationFailed
+//import es.unizar.urlshortener.core.QrGenerationFailed
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail

@@ -82,6 +82,12 @@ inline fun <T> safeCall(
     onFailure = { throw onFailure(it) }
 )
 
+
+/*
 class QrGenerationInfo(val error: String, val retryAfter: String = "30s", val errorType: String)
-class QrGenerationFailed(val type: String, val title: String, val status: Int, val detail: String, val instance: String, val timestamp: String = Instant.now().toString(), val url: String, val qrGenerationInfo: QrGenerationInfo) :
+class QrGenerationFailed(val type: String, val title: String, val status: Int, 
+val detail: String, val instance: String, val timestamp: String = Instant.now().toString(), 
+val url: String, val qrGenerationInfo: QrGenerationInfo) :
     DomainException("Failed to generate the QR")
+ */
+

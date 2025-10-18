@@ -275,6 +275,7 @@ class UrlShortenerControllerImpl(
         request: HttpServletRequest
     ): ResponseEntity<Any> =
         redirectUseCase.redirectTo(id).run {
+            
 
             // Check redirection limits
         if (!limiter.isAllowed(id)) {
@@ -282,7 +283,7 @@ class UrlShortenerControllerImpl(
             val body = mapOf(
                 "type" to "https://api.urlshortener.unizar.es/problems/redirection-limit-exceeded",
                 "title" to "Redirection Limit Exceeded",
-                "status" to 429,
+                "status" to 409,
                 "detail" to "Maximum number of redirections exceeded for this URL",
                 "instance" to "/$id",
                 "timestamp" to timestamp,
